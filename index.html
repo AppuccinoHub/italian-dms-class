@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000" id="metaTheme">
+<meta name="color-scheme" content="dark light">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Italian DMs Class">
+<meta name="application-name" content="Italian DMs Class">
+<meta name="description" content="Italian DMs Class Mode: pair with a classmate and practice essere & avere in partner DMs for a grade.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Italian DMs Class">
+<meta property="og:title" content="Italian DMs · Class Mode">
+<meta property="og:description" content="Partner DMs for Level 2: essere & avere. Join with your teacher’s code.">
+<meta property="og:url" content="https://appuccinohub.github.io/italian-dms-class/">
+<meta property="og:image" content="https://appuccinohub.github.io/italian-dms-class/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Italian DMs · Class Mode">
+<meta name="twitter:description" content="Partner DMs for Level 2: essere & avere. Join with your teacher’s code.">
+<meta name="twitter:image" content="https://appuccinohub.github.io/italian-dms-class/og.png">
+<meta name="msapplication-TileColor" content="#30d158">
+<meta name="msapplication-TileImage" content="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Italian DMs · Class</title>
+<style>
+:root, [data-theme="dark"] {
+  --bg-page:#0a0a0c; --bg:#000; --bar:rgba(28,28,30,.82); --bubble-them:#262629; --bubble-me:#0a84ff;
+  --send:#0a84ff; --text:#fff; --text-dim:#8e8e93; --separator:rgba(84,84,88,.55); --chip-bg:#2c2c2e;
+  --chip-border:#3a3a3c; --field-bg:#1c1c1e; --sheet-bg:#1c1c1e; --green:#30d158; --red:#ff453a;
+  --orange:#ff9f0a; --home-ind:rgba(255,255,255,.92); --toast-bg:rgba(44,44,46,.96);
+  --bezel-metal:#1c1c1e; --bezel-edge:#2c2c2e; --bezel-shadow:rgba(0,0,0,.72);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  --phone-w:390px; --phone-h:844px; --bezel:12px; --radius-device:52px; --radius-screen:44px;
+  color-scheme:dark;
+}
+[data-theme="light"] {
+  --bg-page:#e8e8ed; --bg:#fff; --bar:rgba(249,249,249,.86); --bubble-them:#e9e9eb; --bubble-me:#007AFF;
+  --send:#007AFF; --text:#000; --text-dim:#8e8e93; --separator:rgba(60,60,67,.22); --chip-bg:#e9e9eb;
+  --chip-border:#d1d1d6; --field-bg:#fff; --sheet-bg:#f2f2f7; --green:#34c759; --red:#ff3b30;
+  --orange:#ff9500; --home-ind:rgba(0,0,0,.88); --toast-bg:rgba(60,60,67,.92);
+  --bezel-metal:#1a1a1c; --bezel-edge:#3a3a3c; --bezel-shadow:rgba(0,0,0,.35); color-scheme:light;
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; background:var(--bg-page); font-family:var(--font); color:var(--text); overflow:hidden; user-select:none; }
+body { display:flex; align-items:center; justify-content:center; min-height:100dvh; padding:16px; }
+@media all and (display-mode:standalone) {
+  .device { width:100vw; height:100dvh; max-width:none; border-radius:0; padding:0; box-shadow:none; background:var(--bg); }
+  .device::before, .device .side-btn { display:none; }
+  .screen { border-radius:0; }
+}
+.device {
+  position:relative; width:min(var(--phone-w), calc(100vw - 32px)); height:min(var(--phone-h), calc(100dvh - 32px));
+  background:linear-gradient(160deg,#2a2a2e 0%,var(--bezel-metal) 40%,#0e0e10 100%);
+  border-radius:var(--radius-device); padding:var(--bezel);
+  box-shadow:0 0 0 1px var(--bezel-edge),0 0 0 4px #050505,0 28px 90px var(--bezel-shadow);
+}
+.device .side-btn { position:absolute; background:#2a2a2c; border-radius:2px; pointer-events:none; z-index:2; }
+.device .side-btn.silent { left:-3px; top:110px; width:3px; height:28px; }
+.device .side-btn.vol-up { left:-3px; top:160px; width:3px; height:52px; }
+.device .side-btn.vol-dn { left:-3px; top:220px; width:3px; height:52px; }
+.device .side-btn.power { right:-3px; top:190px; width:3px; height:78px; }
+.screen {
+  position:relative; width:100%; height:100%; background:var(--bg); border-radius:var(--radius-screen);
+  overflow:hidden; display:flex; flex-direction:column;
+}
+.dynamic-island {
+  position:absolute; top:11px; left:50%; transform:translateX(-50%); width:118px; height:34px;
+  background:#000; border-radius:20px; z-index:60; pointer-events:none;
+}
+.status-bar {
+  display:flex; justify-content:space-between; align-items:center; padding:14px 28px 0;
+  font-size:15px; font-weight:600; height:54px; flex-shrink:0; position:relative; z-index:50;
+}
+.view { display:none; flex-direction:column; flex:1; min-height:0; }
+.view.active { display:flex; }
+.nav-blur {
+  background:var(--bar); backdrop-filter:saturate(180%) blur(24px); -webkit-backdrop-filter:saturate(180%) blur(24px);
+  border-bottom:.5px solid var(--separator); flex-shrink:0; padding:4px 12px 10px;
+}
+.back-btn {
+  background:none; border:none; color:var(--send); font:inherit; font-size:17px; cursor:pointer;
+  display:flex; align-items:center; gap:2px; min-height:44px; padding:0 4px;
+}
+.chevron { font-size:28px; line-height:1; margin-top:-2px; }
+h1.page-title { font-size:28px; letter-spacing:-.03em; padding:4px 8px 8px; }
+.sub { color:var(--text-dim); font-size:13px; line-height:1.4; padding:0 8px 12px; }
+.panel { padding:8px 16px 20px; overflow:auto; flex:1; }
+label.field { display:grid; gap:6px; font-size:12px; color:var(--text-dim); margin-bottom:12px; }
+input, select {
+  width:100%; background:var(--field-bg); border:1px solid var(--chip-border); color:var(--text);
+  border-radius:12px; padding:14px; font:inherit; font-size:17px;
+}
+.btn {
+  display:block; width:100%; border:none; border-radius:14px; padding:16px; font:inherit; font-weight:700;
+  font-size:17px; cursor:pointer; background:var(--send); color:#fff; margin-top:8px; min-height:52px;
+}
+.btn.secondary { background:var(--chip-bg); color:var(--text); }
+.btn.good { background:var(--green); color:#000; }
+.btn:disabled { opacity:.45; }
+.help-row { display:grid; gap:8px; margin:8px 0 14px; }
+.help-row button {
+  border:1px solid var(--chip-border); background:var(--chip-bg); color:var(--text); border-radius:12px;
+  padding:12px; font:inherit; font-size:14px; text-align:left; cursor:pointer;
+}
+.help-row button.on { outline:2px solid var(--send); }
+.avatar {
+  width:44px; height:44px; border-radius:50%; display:grid; place-items:center; font-weight:700;
+  background:#5856d6; color:#fff; overflow:hidden; flex-shrink:0;
+}
+.avatar.sm { width:34px; height:34px; font-size:13px; }
+.avatar img { width:100%; height:100%; object-fit:cover; }
+.avatar.c0{background:#5856d6}.avatar.c1{background:#0a84ff}.avatar.c2{background:#30d158}
+.avatar.c3{background:#ff9f0a}.avatar.c4{background:#ff453a}.avatar.c5{background:#64d2ff}
+.color-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.color-row button {
+  width:36px; height:36px; border-radius:50%; border:2px solid transparent; cursor:pointer;
+}
+.color-row button.on { border-color:#fff; box-shadow:0 0 0 2px var(--send); }
+.wait-box { text-align:center; padding:40px 16px; }
+.wait-box .pulse {
+  width:72px; height:72px; border-radius:50%; margin:0 auto 16px; background:var(--send);
+  animation:pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:.85} 50%{transform:scale(1.08);opacity:1} }
+.score-bar {
+  display:flex; justify-content:space-between; align-items:center; padding:8px 16px; font-size:13px;
+  color:var(--text-dim); border-bottom:.5px solid var(--separator);
+}
+.score-bar strong { color:var(--green); font-size:16px; }
+.thread-nav { display:flex; align-items:center; gap:8px; }
+.thread-person { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.thread-person .tname { font-size:15px; font-weight:600; }
+.messages {
+  flex:1; overflow:auto; padding:12px 14px 8px; display:flex; flex-direction:column; gap:8px;
+}
+.bubble {
+  max-width:78%; padding:10px 14px; border-radius:18px; font-size:16px; line-height:1.35;
+  word-break:break-word;
+}
+.bubble.them { align-self:flex-start; background:var(--bubble-them); border-bottom-left-radius:4px; }
+.bubble.me { align-self:flex-end; background:var(--bubble-me); color:#fff; border-bottom-right-radius:4px; }
+.bubble.sys {
+  align-self:center; background:transparent; color:var(--text-dim); font-size:12px; text-align:center;
+  max-width:92%; padding:4px 8px;
+}
+.bubble.wrong { outline:2px solid var(--red); }
+.bubble.right { outline:2px solid var(--green); }
+.cue-hint {
+  padding:8px 14px 0; font-size:13px; color:var(--text-dim); line-height:1.35;
+}
+.cue-hint em { color:var(--orange); font-style:normal; font-weight:600; }
+.suggestions {
+  display:flex; flex-wrap:wrap; gap:8px; padding:10px 14px 6px;
+}
+.chip {
+  border:1px solid var(--chip-border); background:var(--chip-bg); color:var(--text);
+  border-radius:18px; padding:12px 16px; font:inherit; font-size:16px; font-weight:600;
+  cursor:pointer; min-height:48px;
+}
+.chip:disabled { opacity:.4; }
+.composer-wrap { flex-shrink:0; border-top:.5px solid var(--separator); padding-bottom:max(18px, env(safe-area-inset-bottom)); }
+.toast {
+  position:absolute; left:50%; bottom:56px; transform:translateX(-50%); background:var(--toast-bg);
+  color:#fff; padding:10px 16px; border-radius:14px; font-size:13px; opacity:0; pointer-events:none;
+  transition:opacity .2s; z-index:80; max-width:86%; text-align:center;
+}
+.toast.show { opacity:1; }
+.home-indicator {
+  position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px;
+  background:var(--home-ind); border-radius:3px; opacity:.85; z-index:100; pointer-events:none;
+}
+.linkish { color:var(--send); text-decoration:none; font-weight:600; }
+.pass-card {
+  background:var(--chip-bg); border-radius:14px; padding:14px; margin-top:12px; font-size:13px; color:var(--text-dim);
+}
+.sub-code {
+  user-select:text; -webkit-user-select:text; word-break:break-all; font-family:ui-monospace,Menlo,monospace;
+  font-size:11px; background:var(--field-bg); border-radius:10px; padding:10px; margin-top:8px; max-height:120px; overflow:auto;
+}
+</style>
+</head>
+<body>
+<div class="device" id="device">
+  <span class="side-btn silent"></span><span class="side-btn vol-up"></span>
+  <span class="side-btn vol-dn"></span><span class="side-btn power"></span>
+  <div class="screen" id="phone" role="application" aria-label="Italian DMs Class">
+    <div class="dynamic-island" aria-hidden="true"></div>
+    <div class="status-bar" aria-hidden="true">
+      <span id="clock">9:41</span>
+      <span style="opacity:.7;font-size:12px">Class</span>
+    </div>
+
+    <div class="view active" id="viewHome">
+      <div class="nav-blur">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <button type="button" class="back-btn" id="btnTheme" style="color:var(--text-dim)">Theme</button>
+          <a class="back-btn" href="teacher.html" style="text-decoration:none">Teacher</a>
+        </div>
+        <h1 class="page-title">Class Mode</h1>
+        <p class="sub">Pair with a classmate. Practice <em style="color:var(--orange);font-style:normal">essere</em> &amp; <em style="color:var(--orange);font-style:normal">avere</em> in real DMs — for a grade.</p>
+      </div>
+      <div class="panel">
+        <button type="button" class="btn" id="btnGoJoin">Join class</button>
+        <button type="button" class="btn secondary" id="btnGoPass">Pass &amp; play (one phone)</button>
+        <p class="sub" style="padding:16px 0 0">Solo NPC practice (separate app):<br>
+          <a class="linkish" href="https://appuccinohub.github.io/italian-dms/">appuccinohub.github.io/italian-dms</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="view" id="viewJoin">
+      <div class="nav-blur">
+        <button type="button" class="back-btn" id="btnBackHome"><span class="chevron">‹</span> Back</button>
+        <h1 class="page-title">Join class</h1>
+        <p class="sub">Enter the code from your teacher’s screen.</p>
+      </div>
+      <div class="panel">
+        <label class="field">Join code
+          <input id="joinCode" maxlength="6" placeholder="ABC123" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        </label>
+        <label class="field">First name
+          <input id="firstName" maxlength="18" placeholder="Your first name" autocomplete="given-name">
+        </label>
+        <p class="sub" style="padding:0 0 8px">Avatar color</p>
+        <div class="color-row" id="colorRow"></div>
+        <p class="sub" style="padding:0 0 4px">Help level</p>
+        <div class="help-row" id="helpRow">
+          <button type="button" data-help="more">More help</button>
+          <button type="button" class="on" data-help="mid">Just right</button>
+          <button type="button" data-help="challenge">Challenge me</button>
+        </div>
+        <button type="button" class="btn" id="btnConnect">Connect</button>
+        <p class="sub" id="joinErr" style="color:var(--red);padding-top:10px" hidden></p>
+      </div>
+    </div>
+
+    <div class="view" id="viewWait">
+      <div class="nav-blur">
+        <button type="button" class="back-btn" id="btnLeaveWait"><span class="chevron">‹</span> Leave</button>
+        <h1 class="page-title">You’re in</h1>
+      </div>
+      <div class="wait-box">
+        <div class="pulse" aria-hidden="true"></div>
+        <p style="font-size:18px;font-weight:700;margin-bottom:8px" id="waitName">…</p>
+        <p class="sub" id="waitMsg">Connected. Waiting for your teacher to pair you…</p>
+      </div>
+    </div>
+
+    <div class="view" id="viewChat">
+      <div class="nav-blur">
+        <div class="thread-nav">
+          <button type="button" class="back-btn" id="btnLeaveChat"><span class="chevron">‹</span></button>
+          <div class="thread-person">
+            <div class="avatar sm" id="partnerAvatar">P</div>
+            <div class="tname" id="partnerName">Partner</div>
+          </div>
+          <button type="button" class="back-btn" id="btnTurnIn" style="font-size:14px;font-weight:700">Turn in</button>
+        </div>
+      </div>
+      <div class="score-bar">
+        <span>Score <strong id="scorePct">0%</strong> · <span id="scoreFrac">0/0</span></span>
+        <span id="roundLabel">Round 1/10</span>
+      </div>
+      <div class="messages" id="messages" role="log" aria-live="polite"></div>
+      <div class="composer-wrap">
+        <div class="cue-hint" id="cueHint"></div>
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+    </div>
+
+    <div class="view" id="viewPass">
+      <div class="nav-blur">
+        <button type="button" class="back-btn" id="btnBackPass"><span class="chevron">‹</span> Back</button>
+        <h1 class="page-title">Pass &amp; play</h1>
+        <p class="sub">One phone, two profiles. Generate a submission for your teacher if Wi‑Fi blocks Class Mode.</p>
+      </div>
+      <div class="panel" id="passSetup">
+        <label class="field">Player 1 first name<input id="p1name" maxlength="18" placeholder="Alex"></label>
+        <label class="field">Player 2 first name<input id="p2name" maxlength="18" placeholder="Sam"></label>
+        <button type="button" class="btn" id="btnStartPass">Start</button>
+      </div>
+      <div class="panel" id="passDone" hidden>
+        <p class="sub" style="padding:0">Done! Copy this code and give it to your teacher (Import on teacher page).</p>
+        <div class="sub-code" id="passCode"></div>
+        <button type="button" class="btn" id="btnCopyPass">Copy submission</button>
+        <button type="button" class="btn secondary" id="btnPassAgain">Play again</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+    <div class="home-indicator" aria-hidden="true"></div>
+  </div>
+</div>
+
+<script src="vendor/peerjs.min.js"></script>
+<script src="class-shared.js"></script>
+<script>
+(function () {
+  'use strict';
+  const C = window.ItalianDMsClass;
+  const STORAGE = 'italianDMsClass_student_v1';
+  const $ = (id) => document.getElementById(id);
+  const AV = ['c0','c1','c2','c3','c4','c5'];
+
+  let profile = loadProfile();
+  let peer = null, conn = null;
+  let studentId = C.makeStudentId();
+  let partner = null, pairId = null, myRole = 'asker';
+  let round = 0, phase = 'ask'; // ask | reply | wait
+  let correct = 0, tried = 0, completed = false;
+  let transcript = [];
+  let passMode = false;
+  let passPlayers = null;
+  let passActive = 0; // 0 asker index in pass
+
+  function loadProfile() {
+    try {
+      const raw = localStorage.getItem(STORAGE);
+      if (raw) return Object.assign({ name:'', avatarColor:'c0', helpLevel:'mid', theme:'dark' }, JSON.parse(raw));
+    } catch (e) {}
+    return { name:'', avatarColor:'c0', helpLevel:'mid', theme:'dark' };
+  }
+  function saveProfile() {
+    try { localStorage.setItem(STORAGE, JSON.stringify(profile)); } catch (e) {}
+  }
+
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  function showView(id) {
+    document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
+    $(id).classList.add('active');
+  }
+
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', profile.theme === 'light' ? 'light' : 'dark');
+    $('metaTheme').setAttribute('content', profile.theme === 'light' ? '#f9f9f9' : '#000000');
+  }
+
+  function updateClock() {
+    const d = new Date();
+    $('clock').textContent = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  function buildColors() {
+    const row = $('colorRow');
+    row.innerHTML = '';
+    AV.forEach((c) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'avatar ' + c + (profile.avatarColor === c ? ' on' : '');
+      b.style.width = '36px'; b.style.height = '36px';
+      b.addEventListener('click', () => {
+        profile.avatarColor = c;
+        saveProfile();
+        buildColors();
+      });
+      row.appendChild(b);
+    });
+  }
+
+  $('helpRow').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-help]');
+    if (!b) return;
+    profile.helpLevel = b.getAttribute('data-help');
+    saveProfile();
+    $('helpRow').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+  });
+
+  function scoreUI() {
+    $('scorePct').textContent = C.scorePct(correct, tried) + '%';
+    $('scoreFrac').textContent = correct + '/' + tried;
+    $('roundLabel').textContent = 'Round ' + Math.min(round + 1, C.TARGET_ROUNDS) + '/' + C.TARGET_ROUNDS;
+  }
+
+  function addBubble(side, text, opts) {
+    const el = document.createElement('div');
+    el.className = 'bubble ' + side + (opts && opts.correct === true ? ' right' : '') + (opts && opts.correct === false ? ' wrong' : '');
+    el.textContent = text;
+    $('messages').appendChild(el);
+    $('messages').scrollTop = $('messages').scrollHeight;
+    transcript.push({ kind: side === 'sys' ? 'sys' : 'chat', side, text, correct: opts && opts.correct, name: opts && opts.name, at: Date.now() });
+  }
+
+  function clearChips() {
+    $('suggestions').innerHTML = '';
+    $('cueHint').innerHTML = '';
+  }
+
+  function currentPrompt() {
+    return C.CLASS_PROMPTS[Math.min(round, C.CLASS_PROMPTS.length - 1)];
+  }
+
+  function myTurn() {
+    if (completed) return false;
+    if (passMode) {
+      // In pass mode, active player matches phase
+      return true;
+    }
+    if (phase === 'ask') return myRole === 'asker';
+    if (phase === 'reply') return myRole === 'reply';
+    return false;
+  }
+
+  function presentTurn() {
+    clearChips();
+    scoreUI();
+    if (round >= C.TARGET_ROUNDS) {
+      addBubble('sys', 'All 10 rounds done — tap Turn in when ready.');
+      return;
+    }
+    const p = currentPrompt();
+    const isAsk = phase === 'ask';
+    const answer = isAsk ? p.askerAnswer : p.replyAnswer;
+    const cue = isAsk ? p.askerCue : p.replyCue;
+    const template = isAsk ? p.askerReply : p.replyText;
+
+    if (!myTurn()) {
+      $('cueHint').textContent = 'Waiting for ' + (partner && partner.name ? partner.name : 'partner') + '…';
+      return;
+    }
+
+    const who = passMode
+      ? (isAsk ? passPlayers[0].name : passPlayers[1].name)
+      : 'You';
+    $('cueHint').innerHTML = '<strong>' + who + ':</strong> ' + cue;
+
+    const chips = C.uniqueChips(answer, profile.helpLevel);
+    chips.forEach((form) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'chip';
+      btn.textContent = form;
+      btn.addEventListener('click', () => submitChip(form, answer, template, cue));
+      $('suggestions').appendChild(btn);
+    });
+  }
+
+  function submitChip(form, answer, template, cue) {
+    if (!myTurn() || completed) return;
+    const ok = C.normalize(form) === C.normalize(answer);
+    const text = C.fillForm(template, form);
+    tried += 1;
+    if (ok) correct += 1;
+    clearChips();
+    addBubble('me', text, { correct: ok, name: profile.name });
+    if (!ok) {
+      toast('Almost — try the form for this subject next time');
+      // still send the utterance (gentle); partner sees it
+    }
+    scoreUI();
+
+    const payload = {
+      kind: 'utterance',
+      text,
+      correct: ok,
+      answer: form,
+      expected: answer,
+      cue,
+      round,
+      phase
+    };
+
+    if (passMode) {
+      // advance locally
+      advanceAfterSend();
+      return;
+    }
+
+    sendToHub({ type: 'to_partner', payload });
+    // Optimistic local advance for asker; reply waits for partner echo handled in from_partner for partner side
+    if (myRole === 'asker' && phase === 'ask') {
+      phase = 'wait';
+      $('cueHint').textContent = 'Sent — waiting for reply…';
+    } else if (myRole === 'reply' && phase === 'reply') {
+      // finished this round
+      round += 1;
+      phase = 'ask';
+      presentTurn();
+    }
+  }
+
+  function advanceAfterSend() {
+    if (phase === 'ask') {
+      phase = 'reply';
+      presentTurn();
+    } else {
+      round += 1;
+      phase = 'ask';
+      if (round >= C.TARGET_ROUNDS) {
+        clearChips();
+        addBubble('sys', 'Nice work — generate your submission below.');
+        finishPass();
+        return;
+      }
+      presentTurn();
+    }
+  }
+
+  function onFromPartner(payload) {
+    if (!payload || payload.kind !== 'utterance') return;
+    addBubble('them', payload.text, { correct: payload.correct, name: partner && partner.name });
+    // Partner completed ask → I reply
+    if (payload.phase === 'ask' && myRole === 'reply') {
+      phase = 'reply';
+      round = payload.round || round;
+      presentTurn();
+    }
+    // Partner completed reply → next ask round for asker
+    if (payload.phase === 'reply' && myRole === 'asker') {
+      round = (payload.round || round) + 1;
+      phase = 'ask';
+      presentTurn();
+    }
+  }
+
+  function sendToHub(msg) {
+    try { if (conn && conn.open) conn.send(msg); } catch (e) {}
+  }
+
+  function disconnect() {
+    try { if (conn) conn.close(); } catch (e) {}
+    try { if (peer) peer.destroy(); } catch (e) {}
+    peer = null; conn = null;
+    partner = null; pairId = null;
+  }
+
+  function connectToTeacher() {
+    const code = ($('joinCode').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    const name = ($('firstName').value || '').trim().split(/\s+/)[0].slice(0, 18);
+    $('joinErr').hidden = true;
+    if (code.length < 4) { $('joinErr').hidden = false; $('joinErr').textContent = 'Enter the class code from your teacher.'; return; }
+    if (!name) { $('joinErr').hidden = false; $('joinErr').textContent = 'Add your first name.'; return; }
+    profile.name = name;
+    saveProfile();
+    studentId = C.makeStudentId();
+    $('btnConnect').disabled = true;
+    $('btnConnect').textContent = 'Connecting…';
+
+    try {
+      disconnect();
+      peer = new Peer(C.studentPeerId(code, studentId), { debug: 0 });
+    } catch (e) {
+      failConnect();
+      return;
+    }
+
+    const failTimer = setTimeout(() => failConnect('timeout'), 14000);
+
+    peer.on('error', () => {
+      clearTimeout(failTimer);
+      failConnect('error');
+    });
+
+    peer.on('open', () => {
+      conn = peer.connect(C.teacherPeerId(code), {
+        reliable: true,
+        metadata: { studentId, name: profile.name }
+      });
+      conn.on('open', () => {
+        clearTimeout(failTimer);
+        sendToHub({
+          type: 'join',
+          studentId,
+          name: profile.name,
+          avatarColor: profile.avatarColor,
+          helpLevel: profile.helpLevel,
+          photoThumb: null
+        });
+        $('waitName').textContent = profile.name;
+        $('waitMsg').textContent = 'Connected to class ' + code + '. Waiting for your teacher to pair you…';
+        showView('viewWait');
+        $('btnConnect').disabled = false;
+        $('btnConnect').textContent = 'Connect';
+      });
+      conn.on('data', onHubMsg);
+      conn.on('close', () => {
+        if (!completed) toast('Disconnected from teacher hub');
+      });
+      conn.on('error', () => failConnect('conn'));
+    });
+  }
+
+  function failConnect(why) {
+    disconnect();
+    $('btnConnect').disabled = false;
+    $('btnConnect').textContent = 'Connect';
+    $('joinErr').hidden = false;
+    $('joinErr').textContent = "Can’t reach class session — ask teacher to check Wi‑Fi / try again. Or use Pass & play.";
+    toast('Connection failed');
+  }
+
+  function setPartnerAvatar(p) {
+    const el = $('partnerAvatar');
+    el.className = 'avatar sm ' + (p.avatarColor || 'c1');
+    el.innerHTML = '';
+    if (p.photoThumb) {
+      const img = document.createElement('img');
+      img.src = p.photoThumb; img.alt = '';
+      el.appendChild(img);
+    } else {
+      el.textContent = (p.name || 'P').charAt(0).toUpperCase();
+    }
+    $('partnerName').textContent = p.name || 'Partner';
+  }
+
+  function onHubMsg(data) {
+    if (!data || !data.type) return;
+    if (data.type === 'welcome') {
+      $('waitMsg').textContent = 'In “' + (data.sessionName || 'class') + '”. Waiting to be paired…';
+      return;
+    }
+    if (data.type === 'paired') {
+      partner = data.partner;
+      pairId = data.pairId;
+      myRole = data.role === 'reply' ? 'reply' : 'asker';
+      round = data.round || 0;
+      phase = myRole === 'asker' ? 'ask' : 'wait';
+      correct = 0; tried = 0; completed = false;
+      transcript = [];
+      passMode = false;
+      $('messages').innerHTML = '';
+      setPartnerAvatar(partner);
+      addBubble('sys', 'Paired with ' + partner.name + ' · 10 rounds · chip the right form');
+      showView('viewChat');
+      scoreUI();
+      if (myRole === 'asker') presentTurn();
+      else {
+        clearChips();
+        $('cueHint').textContent = 'Waiting for ' + partner.name + ' to start…';
+      }
+      return;
+    }
+    if (data.type === 'unpaired') {
+      showView('viewWait');
+      $('waitMsg').textContent = 'Unpaired — waiting for a new partner…';
+      return;
+    }
+    if (data.type === 'from_partner') {
+      onFromPartner(data.payload);
+    }
+  }
+
+  function turnIn() {
+    if (passMode) { finishPass(); return; }
+    completed = true;
+    sendToHub({ type: 'complete', pairId, scoreCorrect: correct, scoreTried: tried });
+    addBubble('sys', 'Turned in ✓ — score ' + C.scorePct(correct, tried) + '%');
+    clearChips();
+    toast('Submitted to teacher');
+  }
+
+  /* Pass & play */
+  function startPass() {
+    const n1 = ($('p1name').value || '').trim().split(/\s+/)[0].slice(0, 18);
+    const n2 = ($('p2name').value || '').trim().split(/\s+/)[0].slice(0, 18);
+    if (!n1 || !n2) { toast('Enter both first names'); return; }
+    passPlayers = [
+      { id: 'p1', name: n1, avatarColor: 'c0', helpLevel: profile.helpLevel },
+      { id: 'p2', name: n2, avatarColor: 'c2', helpLevel: profile.helpLevel }
+    ];
+    passMode = true;
+    partner = passPlayers[1];
+    profile.name = n1;
+    myRole = 'asker';
+    round = 0; phase = 'ask';
+    correct = 0; tried = 0; completed = false;
+    transcript = [];
+    $('messages').innerHTML = '';
+    setPartnerAvatar(partner);
+    addBubble('sys', 'Pass & play: ' + n1 + ' starts, then pass the phone to ' + n2);
+    showView('viewChat');
+    presentTurn();
+  }
+
+  function finishPass() {
+    completed = true;
+    clearChips();
+    const payload = {
+      code: 'PASS',
+      className: 'Pass & play',
+      players: passPlayers,
+      transcript: transcript,
+      correct, tried, completed: true, round,
+      at: new Date().toISOString()
+    };
+    const code = C.encodeSubmission(payload);
+    $('passSetup').hidden = true;
+    $('passDone').hidden = false;
+    $('passCode').textContent = code;
+    showView('viewPass');
+  }
+
+  // Wire UI
+  $('btnTheme').addEventListener('click', () => {
+    profile.theme = profile.theme === 'light' ? 'dark' : 'light';
+    saveProfile();
+    applyTheme();
+  });
+  $('btnGoJoin').addEventListener('click', () => {
+    $('joinCode').value = (new URLSearchParams(location.search).get('code') || '').toUpperCase();
+    $('firstName').value = profile.name || '';
+    buildColors();
+    showView('viewJoin');
+  });
+  $('btnBackHome').addEventListener('click', () => showView('viewHome'));
+  $('btnGoPass').addEventListener('click', () => {
+    $('passSetup').hidden = false;
+    $('passDone').hidden = true;
+    showView('viewPass');
+  });
+  $('btnBackPass').addEventListener('click', () => showView('viewHome'));
+  $('btnConnect').addEventListener('click', connectToTeacher);
+  $('btnLeaveWait').addEventListener('click', () => { disconnect(); showView('viewHome'); });
+  $('btnLeaveChat').addEventListener('click', () => {
+    if (passMode) { showView('viewPass'); return; }
+    disconnect();
+    showView('viewHome');
+  });
+  $('btnTurnIn').addEventListener('click', turnIn);
+  $('btnStartPass').addEventListener('click', startPass);
+  $('btnCopyPass').addEventListener('click', () => {
+    navigator.clipboard.writeText($('passCode').textContent).then(() => toast('Copied')).catch(() => toast('Select and copy manually'));
+  });
+  $('btnPassAgain').addEventListener('click', () => {
+    $('passSetup').hidden = false;
+    $('passDone').hidden = true;
+  });
+
+  // Prefill code from URL
+  const pre = new URLSearchParams(location.search).get('code');
+  if (pre) {
+    profile; // noop
+  }
+
+  applyTheme();
+  buildColors();
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
