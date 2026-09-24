@@ -144,7 +144,7 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
   <div class="grid">
     <section class="card" id="setupCard">
       <h2>1. Start a class session</h2>
-      <p class="muted">Open this page on your laptop/Chromebook and leave it open. Students join with the code on their phones.</p>
+      <p class="muted">Open this page on your laptop/Chromebook and leave it open. Students join with the code on their Chromebooks (or phones at home).</p>
       <div class="row" style="margin-top:12px">
         <label class="field">Class name (optional)
           <input id="className" maxlength="40" placeholder="Italian 2 · Period 3">
@@ -194,7 +194,7 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
 
   <section class="card">
     <h2>4. Fallback · Import Pass &amp; Play submission</h2>
-    <p class="muted">If school Wi‑Fi blocks PeerJS, students can Pass &amp; Play on one phone and paste a submission code here.</p>
+    <p class="muted">If school Wi‑Fi blocks PeerJS, students can Pass &amp; Play on one device and paste a submission code here.</p>
     <textarea id="importBox" placeholder="Paste IDMS1.… submission code"></textarea>
     <div class="row" style="margin-top:10px">
       <button type="button" class="primary" id="btnImport">Import submission</button>
@@ -248,6 +248,8 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
     } catch (e) { return null; }
   }
 
+  function esc(t) { const d = document.createElement('div'); d.textContent = t == null ? '' : String(t); return d.innerHTML; }
+
   function avatarEl(st) {
     const d = document.createElement('div');
     d.className = 'avatar';
@@ -263,6 +265,15 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
       d.textContent = (st.name || '?').charAt(0).toUpperCase();
     }
     return d;
+  }
+
+  // Per-student score inside a pair (older saved sessions fall back to the pair total)
+  function stuScore(pair, id) {
+    const sc = pair.scores && pair.scores[id];
+    return sc ? sc : { correct: pair.correct, tried: pair.tried };
+  }
+  function stuTurnedIn(pair, id) {
+    return pair.turnedIn ? !!pair.turnedIn[id] : !!pair.completed;
   }
 
   function send(conn, msg) {
@@ -310,7 +321,7 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
       meta.innerHTML = '<strong></strong><span></span>';
       meta.querySelector('strong').textContent = st.name || 'Student';
       meta.querySelector('span').textContent = partner
-        ? ('Paired with ' + partner.name + (pair.completed ? ' · turned in ✓' : ''))
+        ? ('Paired with ' + partner.name + ' · ' + C.scorePct(stuScore(pair, st.id).correct, stuScore(pair, st.id).tried) + '%' + (stuTurnedIn(pair, st.id) ? ' · turned in ✓' : ''))
         : (st.online ? 'Waiting to pair' : 'Disconnected');
       row.appendChild(meta);
       if (!st.pairId) {
@@ -343,7 +354,9 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
     const id = 'pair-' + C.makeStudentId();
     const pair = {
       id, a: aId, b: bId, transcript: [], correct: 0, tried: 0,
-      completed: false, round: 0, helpLevels: [a.helpLevel, b.helpLevel]
+      completed: false, round: 0, helpLevels: [a.helpLevel, b.helpLevel],
+      scores: { [aId]: { correct: 0, tried: 0 }, [bId]: { correct: 0, tried: 0 } },
+      turnedIn: {}
     };
     session.pairs[id] = pair;
     session.pairOrder.push(id);
@@ -356,8 +369,8 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
   }
 
   function autoPair() {
-    const free = Object.values(session.students).filter((s) => !s.pairId).map((s) => s.id);
-    C.shuffle(free);
+    // C.shuffle returns a NEW array — use it (it used to be ignored, so pairs were never random)
+    const free = C.shuffle(Object.values(session.students).filter((s) => !s.pairId && s.online !== false).map((s) => s.id));
     for (let i = 0; i + 1 < free.length; i += 2) makePair(free[i], free[i + 1]);
     if (free.length % 2 === 1) toast('One student left unpaired');
   }
@@ -397,10 +410,13 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
       const head = document.createElement('div');
       head.className = 'pair-head';
       head.innerHTML = '<div class="names"></div><div class="pair-stats"></div>';
-      head.querySelector('.names').textContent = a.name + ' ↔ ' + b.name + (pair.completed ? ' ✓' : '');
+      const sa = stuScore(pair, pair.a), sb = stuScore(pair, pair.b);
+      head.querySelector('.names').textContent =
+        a.name + (stuTurnedIn(pair, pair.a) ? ' ✓' : '') + ' ↔ ' + b.name + (stuTurnedIn(pair, pair.b) ? ' ✓' : '');
       head.querySelector('.pair-stats').innerHTML =
-        '<span class="ok">' + pct + '%</span>' +
-        '<span>' + pair.correct + '/' + pair.tried + ' correct</span>' +
+        '<span class="ok">' + esc(a.name) + ' ' + C.scorePct(sa.correct, sa.tried) + '% (' + sa.correct + '/' + sa.tried + ')</span>' +
+        '<span class="ok">' + esc(b.name) + ' ' + C.scorePct(sb.correct, sb.tried) + '% (' + sb.correct + '/' + sb.tried + ')</span>' +
+        '<span>Pair ' + pct + '%</span>' +
         '<span>Round ' + Math.min((pair.round || 0) + 1, C.TARGET_ROUNDS) + '/' + C.TARGET_ROUNDS + '</span>' +
         '<span>Help: ' + (a.helpLevel || 'mid') + ' / ' + (b.helpLevel || 'mid') + '</span>';
       const tr = document.createElement('div');
@@ -479,6 +495,10 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
         if (typeof payload.correct === 'boolean') {
           pair.tried += 1;
           if (payload.correct) pair.correct += 1;
+          if (!pair.scores) pair.scores = {};
+          const sc = pair.scores[studentId] || (pair.scores[studentId] = { correct: 0, tried: 0 });
+          sc.tried += 1;
+          if (payload.correct) sc.correct += 1;
         }
         if (typeof payload.round === 'number') pair.round = Math.max(pair.round || 0, payload.round);
         saveLocal();
@@ -490,6 +510,8 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
       const pair = st.pairId ? session.pairs[st.pairId] : null;
       if (pair) {
         pair.completed = true;
+        if (!pair.turnedIn) pair.turnedIn = {};
+        pair.turnedIn[studentId] = Date.now();
         pair.transcript.push({ kind: 'sys', text: st.name + ' turned in ✓' });
         saveLocal();
         renderRoster();
@@ -627,14 +649,16 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
       if (!pair) return;
       const a = session.students[pair.a] || { name: '?' };
       const b = session.students[pair.b] || { name: '?' };
-      const ts = new Date().toISOString();
-      rows.push({
-        name: a.name, partner: b.name, scorePct: C.scorePct(pair.correct, pair.tried),
-        completed: pair.completed ? 'Y' : 'N', timestamp: ts, helpLevel: a.helpLevel || 'mid', turns: pair.tried
-      });
-      rows.push({
-        name: b.name, partner: a.name, scorePct: C.scorePct(pair.correct, pair.tried),
-        completed: pair.completed ? 'Y' : 'N', timestamp: ts, helpLevel: b.helpLevel || 'mid', turns: pair.tried
+      const pairPct = C.scorePct(pair.correct, pair.tried);
+      [[a, pair.a, b], [b, pair.b, a]].forEach(([me, id, other]) => {
+        const sc = stuScore(pair, id);
+        const t = pair.turnedIn && pair.turnedIn[id];
+        rows.push({
+          name: me.name, partner: other.name, scorePct: C.scorePct(sc.correct, sc.tried),
+          correct: sc.correct, turns: sc.tried, completed: stuTurnedIn(pair, id) ? 'Y' : 'N', pairPct,
+          timestamp: new Date(typeof t === 'number' ? t : Date.now()).toLocaleString(),
+          helpLevel: me.helpLevel || 'mid'
+        });
       });
     });
     return rows;
@@ -652,7 +676,7 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
 
   function copySummary() {
     const lines = gradebookRows().map((r) =>
-      r.name + ' / ' + r.partner + ' · ' + r.scorePct + '% · done ' + r.completed + ' · ' + r.turns + ' turns'
+      r.name + ' (with ' + r.partner + ') · ' + r.scorePct + '% · ' + r.correct + '/' + r.turns + ' · turned in ' + r.completed
     );
     navigator.clipboard.writeText(lines.join('\n')).then(() => toast('Summary copied')).catch(() => toast('Copy failed'));
   }
@@ -672,16 +696,26 @@ label.field { display:grid; gap:6px; font-size:12px; color:var(--dim); flex:1; m
       $('joinCode').textContent = session.code + ' (import)';
     }
     const p1 = data.players[0], p2 = data.players[1];
-    const id1 = p1.id || C.makeStudentId();
-    const id2 = p2.id || C.makeStudentId();
+    // Always fresh ids: every Pass & play code uses 'p1'/'p2', so reusing them made a
+    // second import overwrite the first pair's students.
+    const id1 = 'imp-' + C.makeStudentId();
+    const id2 = 'imp-' + C.makeStudentId();
     session.students[id1] = { id: id1, name: p1.name, avatarColor: p1.avatarColor || 'c0', photoThumb: null, helpLevel: p1.helpLevel || 'mid', online: false, pairId: null };
     session.students[id2] = { id: id2, name: p2.name, avatarColor: p2.avatarColor || 'c1', photoThumb: null, helpLevel: p2.helpLevel || 'mid', online: false, pairId: null };
     const pid = 'pair-' + C.makeStudentId();
     session.pairs[pid] = {
       id: pid, a: id1, b: id2,
       transcript: (data.transcript || []).map((t) => ({ kind: t.kind || 'chat', side: t.side, name: t.name, text: t.text, correct: t.correct })),
-      correct: data.correct || 0, tried: data.tried || 0, completed: !!data.completed, round: data.round || 0
+      correct: data.correct || 0, tried: data.tried || 0, completed: !!data.completed, round: data.round || 0,
+      turnedIn: data.completed ? { [id1]: Date.now(), [id2]: Date.now() } : {}
     };
+    // Per-player scores (new submissions); older codes only have the pair total
+    if (typeof p1.tried === 'number' && typeof p2.tried === 'number') {
+      session.pairs[pid].scores = {
+        [id1]: { correct: p1.correct || 0, tried: p1.tried },
+        [id2]: { correct: p2.correct || 0, tried: p2.tried }
+      };
+    }
     session.students[id1].pairId = pid;
     session.students[id2].pairId = pid;
     session.pairOrder.push(pid);

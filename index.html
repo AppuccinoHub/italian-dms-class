@@ -167,7 +167,7 @@ input, select {
 .chip:disabled { opacity:.4; }
 .composer-wrap { flex-shrink:0; border-top:.5px solid var(--separator); padding-bottom:max(18px, env(safe-area-inset-bottom)); }
 .toast {
-  position:absolute; left:50%; bottom:56px; transform:translateX(-50%); background:var(--toast-bg);
+  position:absolute; left:50%; top:64px; transform:translateX(-50%); background:var(--toast-bg);
   color:#fff; padding:10px 16px; border-radius:14px; font-size:13px; opacity:0; pointer-events:none;
   transition:opacity .2s; z-index:80; max-width:86%; text-align:center;
 }
@@ -208,7 +208,7 @@ input, select {
       </div>
       <div class="panel">
         <button type="button" class="btn" id="btnGoJoin">Join class</button>
-        <button type="button" class="btn secondary" id="btnGoPass">Pass &amp; play (one phone)</button>
+        <button type="button" class="btn secondary" id="btnGoPass">Pass &amp; play (one device)</button>
         <p class="sub" style="padding:16px 0 0">Solo NPC practice (separate app):<br>
           <a class="linkish" href="https://appuccinohub.github.io/italian-dms/">appuccinohub.github.io/italian-dms</a>
         </p>
@@ -279,7 +279,7 @@ input, select {
       <div class="nav-blur">
         <button type="button" class="back-btn" id="btnBackPass"><span class="chevron">‹</span> Back</button>
         <h1 class="page-title">Pass &amp; play</h1>
-        <p class="sub">One phone, two profiles. Generate a submission for your teacher if Wi‑Fi blocks Class Mode.</p>
+        <p class="sub">One device, two players taking turns. If school Wi‑Fi blocks Class Mode, finish here and give your teacher the submission code.</p>
       </div>
       <div class="panel" id="passSetup">
         <label class="field">Player 1 first name<input id="p1name" maxlength="18" placeholder="Alex"></label>
@@ -318,7 +318,19 @@ input, select {
   let transcript = [];
   let passMode = false;
   let passPlayers = null;
-  let passActive = 0; // 0 asker index in pass
+  let passScores = [{ correct: 0, tried: 0 }, { correct: 0, tried: 0 }];
+
+  // Roles alternate every round so both partners practise asking AND answering.
+  // In live mode the 'asker' from the teacher asks on even rounds (1, 3, 5…).
+  function askerIsMe() {
+    const even = round % 2 === 0;
+    return myRole === 'asker' ? even : !even;
+  }
+  // Pass & play: index (0/1) of the player whose turn it is
+  function passTurnIdx() {
+    const askerIdx = round % 2;
+    return phase === 'ask' ? askerIdx : 1 - askerIdx;
+  }
 
   function loadProfile() {
     try {
@@ -381,8 +393,14 @@ input, select {
   });
 
   function scoreUI() {
-    $('scorePct').textContent = C.scorePct(correct, tried) + '%';
-    $('scoreFrac').textContent = correct + '/' + tried;
+    if (passMode && passPlayers) {
+      const a = passScores[0], b = passScores[1];
+      $('scorePct').textContent = passPlayers[0].name + ' ' + C.scorePct(a.correct, a.tried) + '%';
+      $('scoreFrac').textContent = passPlayers[1].name + ' ' + C.scorePct(b.correct, b.tried) + '%';
+    } else {
+      $('scorePct').textContent = C.scorePct(correct, tried) + '%';
+      $('scoreFrac').textContent = correct + '/' + tried;
+    }
     $('roundLabel').textContent = 'Round ' + Math.min(round + 1, C.TARGET_ROUNDS) + '/' + C.TARGET_ROUNDS;
   }
 
@@ -410,8 +428,8 @@ input, select {
       // In pass mode, active player matches phase
       return true;
     }
-    if (phase === 'ask') return myRole === 'asker';
-    if (phase === 'reply') return myRole === 'reply';
+    if (phase === 'ask') return askerIsMe();
+    if (phase === 'reply') return !askerIsMe();
     return false;
   }
 
@@ -433,10 +451,19 @@ input, select {
       return;
     }
 
-    const who = passMode
-      ? (isAsk ? passPlayers[0].name : passPlayers[1].name)
-      : 'You';
-    $('cueHint').innerHTML = '<strong>' + who + ':</strong> ' + cue;
+    const who = passMode ? passPlayers[passTurnIdx()].name : 'You';
+    const gloss = isAsk ? p.askerGloss : p.replyGloss;
+    $('cueHint').innerHTML = '';
+    const whoEl = document.createElement('strong');
+    whoEl.textContent = who + ': ';
+    $('cueHint').appendChild(whoEl);
+    $('cueHint').appendChild(document.createTextNode(cue));
+    if (profile.helpLevel === 'more' && gloss) {
+      const g = document.createElement('div');
+      g.style.cssText = 'font-style:italic;margin-top:2px';
+      g.textContent = 'English: “' + gloss + '”';
+      $('cueHint').appendChild(g);
+    }
 
     const chips = C.uniqueChips(answer, profile.helpLevel);
     chips.forEach((form) => {
@@ -444,22 +471,29 @@ input, select {
       btn.type = 'button';
       btn.className = 'chip';
       btn.textContent = form;
-      btn.addEventListener('click', () => submitChip(form, answer, template, cue));
+      btn.addEventListener('click', () => submitChip(form, answer, template, cue, isAsk ? p.askerSubject + ' + ' + p.askerVerb : p.replySubject + ' + ' + p.replyVerb));
       $('suggestions').appendChild(btn);
     });
   }
 
-  function submitChip(form, answer, template, cue) {
+  function submitChip(form, answer, template, cue, rule) {
     if (!myTurn() || completed) return;
     const ok = C.normalize(form) === C.normalize(answer);
     const text = C.fillForm(template, form);
+    if (passMode) {
+      const idx = passTurnIdx();
+      passScores[idx].tried += 1;
+      if (ok) passScores[idx].correct += 1;
+    }
     tried += 1;
     if (ok) correct += 1;
     clearChips();
-    addBubble('me', text, { correct: ok, name: profile.name });
+    const speaker = passMode ? passPlayers[passTurnIdx()] : { name: profile.name };
+    // Pass & play: player 2 shows on the left, like a real DM thread
+    addBubble(passMode && passTurnIdx() === 1 ? 'them' : 'me', text, { correct: ok, name: speaker.name });
     if (!ok) {
-      toast('Almost — try the form for this subject next time');
-      // still send the utterance (gentle); partner sees it
+      // Wrong forms still send (gentle), but the student sees the right one
+      addBubble('sys', 'Right form: “' + answer + '” (' + rule + ') → ' + C.fillForm(template, answer));
     }
     scoreUI();
 
@@ -482,10 +516,10 @@ input, select {
 
     sendToHub({ type: 'to_partner', payload });
     // Optimistic local advance for asker; reply waits for partner echo handled in from_partner for partner side
-    if (myRole === 'asker' && phase === 'ask') {
+    if (phase === 'ask') {
       phase = 'wait';
-      $('cueHint').textContent = 'Sent — waiting for reply…';
-    } else if (myRole === 'reply' && phase === 'reply') {
+      $('cueHint').textContent = 'Sent — waiting for ' + (partner && partner.name ? partner.name : 'your partner') + '’s reply…';
+    } else if (phase === 'reply') {
       // finished this round
       round += 1;
       phase = 'ask';
@@ -513,15 +547,16 @@ input, select {
   function onFromPartner(payload) {
     if (!payload || payload.kind !== 'utterance') return;
     addBubble('them', payload.text, { correct: payload.correct, name: partner && partner.name });
-    // Partner completed ask → I reply
-    if (payload.phase === 'ask' && myRole === 'reply') {
+    const r = typeof payload.round === 'number' ? payload.round : round;
+    // Partner asked → I reply
+    if (payload.phase === 'ask') {
+      round = r;
       phase = 'reply';
-      round = payload.round || round;
       presentTurn();
     }
-    // Partner completed reply → next ask round for asker
-    if (payload.phase === 'reply' && myRole === 'asker') {
-      round = (payload.round || round) + 1;
+    // Partner replied → next round (roles swap)
+    if (payload.phase === 'reply') {
+      round = r + 1;
       phase = 'ask';
       presentTurn();
     }
@@ -628,20 +663,16 @@ input, select {
       pairId = data.pairId;
       myRole = data.role === 'reply' ? 'reply' : 'asker';
       round = data.round || 0;
-      phase = myRole === 'asker' ? 'ask' : 'wait';
+      phase = 'ask';
       correct = 0; tried = 0; completed = false;
       transcript = [];
       passMode = false;
       $('messages').innerHTML = '';
       setPartnerAvatar(partner);
-      addBubble('sys', 'Paired with ' + partner.name + ' · 10 rounds · chip the right form');
+      addBubble('sys', 'Paired with ' + partner.name + ' · 10 rounds · you take turns asking · tap the right form');
       showView('viewChat');
       scoreUI();
-      if (myRole === 'asker') presentTurn();
-      else {
-        clearChips();
-        $('cueHint').textContent = 'Waiting for ' + partner.name + ' to start…';
-      }
+      presentTurn();
       return;
     }
     if (data.type === 'unpaired') {
@@ -655,6 +686,8 @@ input, select {
   }
 
   function turnIn() {
+    if (completed) return;
+    if (round < C.TARGET_ROUNDS && !confirm('Turn in now? You finished ' + Math.min(round, C.TARGET_ROUNDS) + ' of ' + C.TARGET_ROUNDS + ' rounds.')) return;
     if (passMode) { finishPass(); return; }
     completed = true;
     sendToHub({ type: 'complete', pairId, scoreCorrect: correct, scoreTried: tried });
@@ -678,10 +711,11 @@ input, select {
     myRole = 'asker';
     round = 0; phase = 'ask';
     correct = 0; tried = 0; completed = false;
+    passScores = [{ correct: 0, tried: 0 }, { correct: 0, tried: 0 }];
     transcript = [];
     $('messages').innerHTML = '';
     setPartnerAvatar(partner);
-    addBubble('sys', 'Pass & play: ' + n1 + ' starts, then pass the phone to ' + n2);
+    addBubble('sys', 'Pass & play: ' + n1 + ' starts, then pass the device to ' + n2 + '. You take turns asking.');
     showView('viewChat');
     presentTurn();
   }
@@ -692,7 +726,7 @@ input, select {
     const payload = {
       code: 'PASS',
       className: 'Pass & play',
-      players: passPlayers,
+      players: passPlayers.map((pl, i) => Object.assign({}, pl, passScores[i])),
       transcript: transcript,
       correct, tried, completed: true, round,
       at: new Date().toISOString()
@@ -741,10 +775,8 @@ input, select {
   });
 
   // Prefill code from URL
-  const pre = new URLSearchParams(location.search).get('code');
-  if (pre) {
-    profile; // noop
-  }
+  // Link from the teacher (…/?code=ABC123): go straight to the Join screen
+  if (new URLSearchParams(location.search).get('code')) $('btnGoJoin').click();
 
   applyTheme();
   buildColors();

@@ -1,5 +1,5 @@
 /* Italian DMs Class — app-shell SW (school-safe; PeerJS vendored) */
-const CACHE = 'italian-dms-class-v1';
+const CACHE = 'italian-dms-class-v2';
 const SHELL = [
   './',
   './index.html',
