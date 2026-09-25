@@ -34,7 +34,7 @@
       replyCue:'Say yes, but the homework is easy — essere (loro: i compiti)', replyText:'Sì, ma i compiti {FORM} facili 😎', replyAnswer:'sono', replyVerb:'essere', replySubject:'loro', replyGloss:'Yes, but the homework is easy' },
     { id:'p9', askerCue:'Ask if they are wiped out — essere (tu)', askerReply:'Tu {FORM} a pezzi? Sembri uno zombie ahah 🧟', askerAnswer:'sei', askerVerb:'essere', askerSubject:'tu', askerGloss:'Are you wiped out? You look like a zombie lol',
       replyCue:'Say you are so sleepy — avere sonno (io)', replyText:'Sì, io {FORM} troppo sonno 😴', replyAnswer:'ho', replyVerb:'avere', replySubject:'io', replyGloss:'Yes, I’m way too sleepy' },
-    { id:'p10', askerCue:'Tell the group “you guys are the best” — essere (voi)', askerReply:'Raga, voi {FORM} i migliori! 💛', askerAnswer:'siete', askerVerb:'essere', askerSubject:'voi', askerGloss:'Guys, you’re the best!',
+    { id:'p10', askerCue:'Tell the group “you guys are amazing” — essere (voi)', askerReply:'Raga, voi {FORM} incredibili! 💛', askerAnswer:'siete', askerVerb:'essere', askerSubject:'voi', askerGloss:'Guys, you’re amazing!',
       replyCue:'Say thanks, you are right — avere ragione (tu)', replyText:'Grazie! Tu {FORM} ragione, siamo un team 😎', replyAnswer:'hai', replyVerb:'avere', replySubject:'tu', replyGloss:'Thanks! You’re right, we’re a team' }
   ];
 

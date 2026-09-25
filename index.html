@@ -588,12 +588,22 @@ input, select {
     }
   }
 
+  function partnerText(payload, r) {
+    if (payload.correct !== false) return payload.text;
+    const p = C.CLASS_PROMPTS[r];
+    const template = p && (payload.phase === 'ask' ? p.askerReply : p.replyText);
+    const right = payload.expected || (p && (payload.phase === 'ask' ? p.askerAnswer : p.replyAnswer));
+    return template && right ? C.fillForm(template, right) : payload.text;
+  }
+
   function onFromPartner(payload) {
     if (!payload || payload.kind !== 'utterance') return;
     // The partner's answer shows without red/green: only the student who answered
-    // sees their own feedback. Scores and the teacher's transcript are unchanged.
-    addBubble('them', payload.text, { correct: payload.correct, name: partner && partner.name, hideMark: true });
+    // sees their own feedback. If the partner tapped a wrong form, this screen shows
+    // the corrected sentence, so nobody reads wrong Italian as if it were right.
+    // Scores and the teacher's transcript (built from the payload) are unchanged.
     const r = typeof payload.round === 'number' ? payload.round : round;
+    addBubble('them', partnerText(payload, r), { correct: payload.correct, name: partner && partner.name, hideMark: true });
     // Partner asked → I reply
     if (payload.phase === 'ask') {
       round = r;
