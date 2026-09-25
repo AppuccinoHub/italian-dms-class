@@ -457,7 +457,11 @@ input, select {
     const whoEl = document.createElement('strong');
     whoEl.textContent = who + ': ';
     $('cueHint').appendChild(whoEl);
-    $('cueHint').appendChild(document.createTextNode(cue));
+    // Just right: hide the verb name so students choose essere vs avere themselves
+    const shownCue = profile.helpLevel === 'mid'
+      ? cue.replace(/ — (?:essere|avere)[^()]*\(([^)]*)\)\s*$/, ' — subject: $1 · essere or avere?')
+      : cue;
+    $('cueHint').appendChild(document.createTextNode(shownCue));
     if (profile.helpLevel === 'more' && gloss) {
       const g = document.createElement('div');
       g.style.cssText = 'font-style:italic;margin-top:2px';
