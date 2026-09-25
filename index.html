@@ -152,6 +152,9 @@ input, select {
 }
 .bubble.wrong { outline:2px solid var(--red); }
 .bubble.right { outline:2px solid var(--green); }
+/* Pass & play: the answer's red/green outline fades out after 3 s */
+.bubble.settling { outline-color:transparent; transition:outline-color .6s ease; }
+@media (prefers-reduced-motion: reduce) { .bubble.settling { transition:none; } }
 .cue-hint {
   padding:8px 14px 0; font-size:13px; color:var(--text-dim); line-height:1.35;
 }
@@ -165,7 +168,6 @@ input, select {
   cursor:pointer; min-height:48px;
 }
 .chip:disabled { opacity:.4; }
-.chip.handoff { background:var(--send); color:#fff; border-color:transparent; }
 .composer-wrap { flex-shrink:0; border-top:.5px solid var(--separator); padding-bottom:max(18px, env(safe-area-inset-bottom)); }
 .toast {
   position:absolute; left:50%; top:64px; transform:translateX(-50%); background:var(--toast-bg);
@@ -320,6 +322,30 @@ input, select {
   let passMode = false;
   let passPlayers = null;
   let passScores = [{ correct: 0, tried: 0 }, { correct: 0, tried: 0 }];
+  // Pass & play timers (feedback clearing, end of game). Each belongs to one
+  // game: starting, finishing or leaving a game stops them.
+  const FEEDBACK_MS = 3000, FADE_MS = 600;
+  let passGen = 0;
+  let passTimers = [];
+  function passLater(fn, ms) {
+    const gen = passGen;
+    const t = { fn, id: 0 };
+    t.id = setTimeout(() => {
+      passTimers = passTimers.filter((x) => x !== t);
+      if (gen === passGen && passMode) fn(false);
+    }, ms);
+    passTimers.push(t);
+  }
+  // runNow: apply pending clearing straight away (no fade) instead of dropping it
+  function stopPassTimers(runNow) {
+    const pending = passTimers;
+    passTimers = [];
+    passGen += 1;
+    pending.forEach((t) => { clearTimeout(t.id); if (runNow) t.fn(true); });
+  }
+  function reducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
 
   // Roles alternate every round so both partners practise asking AND answering.
   // In live mode the 'asker' from the teacher asks on even rounds (1, 3, 5…).
@@ -430,15 +456,36 @@ input, select {
     $('messages').appendChild(el);
     $('messages').scrollTop = $('messages').scrollHeight;
     transcript.push({ kind: side === 'sys' ? 'sys' : 'chat', side, text, correct: opts && opts.correct, name: opts && opts.name, at: Date.now() });
+    return el;
+  }
+  function scrollToEnd() {
+    const m = $('messages');
+    m.scrollTop = m.scrollHeight;
   }
 
   function clearChips() {
     $('suggestions').innerHTML = '';
     $('cueHint').innerHTML = '';
   }
-  // Remove every red/green outline from the thread (Pass & play hand-off).
+  // Remove every red/green outline from the thread.
   function clearMarks() {
-    $('messages').querySelectorAll('.bubble.right, .bubble.wrong').forEach((b) => b.classList.remove('right', 'wrong'));
+    $('messages').querySelectorAll('.bubble.right, .bubble.wrong').forEach((b) => b.classList.remove('right', 'wrong', 'settling'));
+  }
+  // Pass & play: after the feedback time, fade the outline away and, if the
+  // answer was wrong, show the corrected sentence. The transcript, scores and
+  // submission code keep what was actually tapped.
+  function settleBubble(el, correctedText, instant) {
+    if (!el || !el.isConnected) return;
+    const m = $('messages');
+    const atEnd = m.scrollHeight - m.scrollTop - m.clientHeight < 60;
+    if (correctedText) el.textContent = correctedText;
+    if (instant || reducedMotion()) {
+      el.classList.remove('right', 'wrong', 'settling');
+    } else {
+      el.classList.add('settling');
+      passLater(() => el.classList.remove('right', 'wrong', 'settling'), FADE_MS);
+    }
+    if (atEnd) scrollToEnd();
   }
 
   function currentPrompt() {
@@ -497,6 +544,8 @@ input, select {
       btn.addEventListener('click', () => submitChip(form, answer, template, cue, isAsk ? p.askerSubject + ' + ' + p.askerVerb : p.replySubject + ' + ' + p.replyVerb));
       $('suggestions').appendChild(btn);
     });
+    // The cue and chips change the size of the chat area: keep the last message in view.
+    scrollToEnd();
   }
 
   function submitChip(form, answer, template, cue, rule) {
@@ -513,7 +562,7 @@ input, select {
     clearChips();
     const speaker = passMode ? passPlayers[passTurnIdx()] : { name: profile.name };
     // Pass & play: player 2 shows on the left, like a real DM thread
-    addBubble(passMode && passTurnIdx() === 1 ? 'them' : 'me', text, { correct: ok, name: speaker.name });
+    const sentEl = addBubble(passMode && passTurnIdx() === 1 ? 'them' : 'me', text, { correct: ok, name: speaker.name });
     if (!ok) {
       // Wrong forms still send (gentle), but the student sees the right one
       addBubble('sys', 'Right form: “' + answer + '” (' + rule + ') → ' + C.fillForm(template, answer));
@@ -532,12 +581,23 @@ input, select {
     };
 
     if (passMode) {
-      // The player who just answered sees their own feedback. After a question
-      // the device goes to the other player, so we pause for a hand-off and
-      // clear the outlines then. After a reply the same player asks next.
+      // The player who just answered sees their own feedback for 3 seconds, then
+      // it clears by itself (wrong answers turn into the corrected sentence).
+      // Play goes on straight away: the next cue and chips don't wait.
+      passLater((instant) => settleBubble(sentEl, ok ? '' : C.fillForm(template, answer), instant), FEEDBACK_MS);
       const last = phase === 'reply' && round + 1 >= C.TARGET_ROUNDS;
-      if (phase === 'ask' || last) showHandoff(last);
-      else advanceAfterSend();
+      if (last) {
+        // Let the last answer's feedback show and clear before the code screen.
+        round += 1;
+        phase = 'ask';
+        clearChips();
+        scoreUI();
+        addBubble('sys', 'Nice work — generate your submission below.');
+        scrollToEnd();
+        passLater(finishPass, FEEDBACK_MS + FADE_MS + 400);
+      } else {
+        advanceAfterSend();
+      }
       return;
     }
 
@@ -552,23 +612,6 @@ input, select {
       phase = 'ask';
       presentTurn();
     }
-  }
-
-  function showHandoff(last) {
-    const next = passPlayers[1 - passTurnIdx()];
-    $('cueHint').textContent = last ? 'Last turn done — check your answer above.' : 'Check your answer above, then pass the device to ' + next.name + '.';
-    $('suggestions').innerHTML = '';
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'chip handoff';
-    btn.id = 'btnHandoff';
-    btn.textContent = last ? 'Finish → get the code' : next.name + '’s turn →';
-    btn.addEventListener('click', () => {
-      if (!passMode || completed) return;
-      clearMarks();
-      advanceAfterSend();
-    });
-    $('suggestions').appendChild(btn);
   }
 
   function advanceAfterSend() {
@@ -723,6 +766,7 @@ input, select {
       phase = 'ask';
       correct = 0; tried = 0; completed = false;
       transcript = [];
+      stopPassTimers(false);
       passMode = false;
       $('messages').innerHTML = '';
       setPartnerAvatar(partner);
@@ -763,6 +807,7 @@ input, select {
       { id: 'p1', name: n1, avatarColor: 'c0', helpLevel: profile.helpLevel },
       { id: 'p2', name: n2, avatarColor: 'c2', helpLevel: profile.helpLevel }
     ];
+    stopPassTimers(false);
     passMode = true;
     partner = passPlayers[1];
     myRole = 'asker';
@@ -778,7 +823,9 @@ input, select {
   }
 
   function finishPass() {
+    if (completed) return;
     completed = true;
+    stopPassTimers(true);
     clearChips();
     clearMarks();
     forgetName();
@@ -819,7 +866,14 @@ input, select {
   $('btnConnect').addEventListener('click', connectToTeacher);
   $('btnLeaveWait').addEventListener('click', () => { disconnect(); showView('viewHome'); });
   $('btnLeaveChat').addEventListener('click', () => {
-    if (passMode) { showView('viewPass'); return; }
+    if (passMode) {
+      // Leaving mid-game: apply any pending clearing now; if the last answer was
+      // already given, finish so the code is ready.
+      if (!completed && round >= C.TARGET_ROUNDS) { finishPass(); return; }
+      stopPassTimers(true);
+      showView('viewPass');
+      return;
+    }
     disconnect();
     showView('viewHome');
   });
