@@ -38,7 +38,7 @@
       replyBlank:'I ___ sixteen', replySubjectLabel:null, replyIdiom:'avere … anni = to be … years old' },
     { id:'p5', askerReply:'Raga, voi {FORM} freddo? Qui è un freezer 🥶', askerAnswer:'avete', askerVerb:'avere', askerSubject:'voi', askerGloss:'Guys, are you cold? It’s a freezer in here',
       askerBlank:'Guys, ___ you cold? It’s a freezer in here', askerSubjectLabel:null, askerIdiom:'avere freddo = to be cold',
-      replyText:'Sì, noi {FORM} freddo tutti!', replyAnswer:'abbiamo', replyVerb:'avere', replySubject:'noi', replyGloss:'Yes, we’re all cold!',
+      replyText:'Sì, noi {FORM} tutti freddo!', replyAnswer:'abbiamo', replyVerb:'avere', replySubject:'noi', replyGloss:'Yes, we’re all cold!',
       replyBlank:'Yes, we ___ all cold!', replySubjectLabel:null, replyIdiom:'avere freddo = to be cold' },
     { id:'p6', askerReply:'Marco e Leo {FORM} al parco? 🏀', askerAnswer:'sono', askerVerb:'essere', askerSubject:'loro', askerGloss:'Are Marco and Leo at the park?',
       askerBlank:'___ Marco and Leo at the park?', askerSubjectLabel:'Marco e Leo (= loro)', askerIdiom:null,
