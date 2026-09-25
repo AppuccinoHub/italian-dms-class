@@ -156,9 +156,21 @@ input, select {
 .bubble.settling { outline-color:transparent; transition:outline-color .6s ease; }
 @media (prefers-reduced-motion: reduce) { .bubble.settling { transition:none; } }
 .cue-hint {
-  padding:8px 14px 0; font-size:13px; color:var(--text-dim); line-height:1.35;
+  padding:8px 14px 0; font-size:15px; color:var(--text); line-height:1.35; text-align:center;
 }
-.cue-hint em { color:var(--orange); font-style:normal; font-weight:600; }
+.cue-hint em { color:var(--text); font-style:normal; font-weight:700; }
+.cue-hint .idiom { font-size:14px; opacity:.85; margin-top:1px; }
+/* the blank, and the student's sentence before it is sent (draft) */
+.blank {
+  display:inline-block; min-width:48px; padding:0 4px; text-align:center; font-weight:700;
+  border-bottom:3px solid var(--orange); background:rgba(255,159,10,.22); border-radius:4px 4px 0 0;
+}
+.draft-wrap { display:flex; flex-direction:column; max-width:78%; }
+.draft-wrap.me { align-self:flex-end; align-items:flex-end; }
+.draft-wrap.them { align-self:flex-start; align-items:flex-start; }
+.draft-wrap .bubble { max-width:100%; background:transparent; color:var(--text); border:2px dashed var(--send); }
+.draft-label { font-size:12px; color:var(--text-dim); font-weight:600; margin:0 6px 3px; }
+.draft-gloss { font-size:14px; color:var(--text-dim); margin:3px 6px 0; line-height:1.3; }
 .suggestions {
   display:flex; flex-wrap:wrap; gap:8px; padding:10px 14px 6px;
 }
@@ -466,6 +478,41 @@ input, select {
   function clearChips() {
     $('suggestions').innerHTML = '';
     $('cueHint').innerHTML = '';
+    removeDraft();
+  }
+  // The student's sentence before it is sent: dashed outline, highlighted blank.
+  // Not part of the transcript.
+  function showDraft(side, template, english, label) {
+    removeDraft();
+    const wrap = document.createElement('div');
+    wrap.className = 'draft-wrap ' + side;
+    wrap.id = 'draft';
+    const lab = document.createElement('div');
+    lab.className = 'draft-label';
+    lab.textContent = label;
+    const bub = document.createElement('div');
+    bub.className = 'bubble ' + side + ' draft';
+    const parts = String(template).split('{FORM}');
+    bub.appendChild(document.createTextNode(parts[0]));
+    const blank = document.createElement('span');
+    blank.className = 'blank';
+    blank.textContent = '___';
+    bub.appendChild(blank);
+    bub.appendChild(document.createTextNode(parts.slice(1).join('')));
+    wrap.appendChild(lab);
+    wrap.appendChild(bub);
+    if (english) {
+      const g = document.createElement('div');
+      g.className = 'draft-gloss';
+      g.textContent = english;
+      wrap.appendChild(g);
+    }
+    $('messages').appendChild(wrap);
+    scrollToEnd();
+  }
+  function removeDraft() {
+    const d = $('draft');
+    if (d) d.remove();
   }
   // Remove every red/green outline from the thread.
   function clearMarks() {
@@ -513,7 +560,6 @@ input, select {
     const p = currentPrompt();
     const isAsk = phase === 'ask';
     const answer = isAsk ? p.askerAnswer : p.replyAnswer;
-    const cue = isAsk ? p.askerCue : p.replyCue;
     const template = isAsk ? p.askerReply : p.replyText;
 
     if (!myTurn()) {
@@ -521,17 +567,33 @@ input, select {
       return;
     }
 
-    const who = passMode ? passPlayers[passTurnIdx()].name : 'You';
-    const gloss = isAsk ? p.askerGloss : p.replyGloss;
+    // The sentence with the blank shows first, as an unsent draft on this
+    // player's side, with its English (___ kept) under it.
+    const who = passMode ? passPlayers[passTurnIdx()].name : '';
+    showDraft(passMode && passTurnIdx() === 1 ? 'them' : 'me', template, isAsk ? p.askerBlank : p.replyBlank,
+      who ? who + '’s message · not sent yet' : 'Your message · not sent yet');
+    // One instruction line (plus an avere-expression line) above the chips.
+    const subject = (isAsk ? p.askerSubjectLabel : p.replySubjectLabel) || (isAsk ? p.askerSubject : p.replySubject);
+    const verb = isAsk ? p.askerVerb : p.replyVerb;
+    const idiom = isAsk ? p.askerIdiom : p.replyIdiom;
+    const cue = profile.helpLevel === 'challenge'
+      ? 'Subject: ' + subject + ' · essere or avere?'
+      : 'Subject: ' + subject + ' · Verb: ' + verb + (idiom ? ' (' + idiom + ')' : '');
     $('cueHint').innerHTML = '';
-    const whoEl = document.createElement('strong');
-    whoEl.textContent = who + ': ';
-    $('cueHint').appendChild(whoEl);
-    $('cueHint').appendChild(document.createTextNode(cue));
-    if (profile.helpLevel === 'more' && gloss) {
+    const line = document.createElement('div');
+    line.appendChild(document.createTextNode('Subject: '));
+    const se = document.createElement('em'); se.textContent = subject; line.appendChild(se);
+    if (profile.helpLevel === 'challenge') {
+      line.appendChild(document.createTextNode(' · essere or avere?'));
+    } else {
+      line.appendChild(document.createTextNode(' · Verb: '));
+      const ve = document.createElement('em'); ve.textContent = verb; line.appendChild(ve);
+    }
+    $('cueHint').appendChild(line);
+    if (idiom && profile.helpLevel !== 'challenge') {
       const g = document.createElement('div');
-      g.style.cssText = 'font-style:italic;margin-top:2px';
-      g.textContent = 'English: “' + gloss + '”';
+      g.className = 'idiom';
+      g.textContent = idiom;
       $('cueHint').appendChild(g);
     }
 

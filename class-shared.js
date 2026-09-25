@@ -14,28 +14,52 @@
 
   /* 10 rounds. Every template names its subject (tu / io / voi / Marco e Leo …) so a
      random wrong chip can never also be grammatical. Roles alternate each round
-     (see index.html), so both partners practise questions and answers. */
+     (see index.html), so both partners practise questions and answers.
+     The student sees their sentence as an unsent draft with the blank (…Reply /
+     replyText), its English with ___ (…Blank), and one instruction line built from
+     …Subject / …SubjectLabel (names, nouns) / …Verb, plus …Idiom for avere expressions.
+     …Gloss is the full English. */
   const CLASS_PROMPTS = [
-    { id:'p1', askerCue:'Ask if they are hungry — avere fame (tu)', askerReply:'Ehi, tu {FORM} fame? 🍕', askerAnswer:'hai', askerVerb:'avere', askerSubject:'tu', askerGloss:'Hey, are you hungry?',
-      replyCue:'Say yes, you are really hungry — avere fame (io)', replyText:'Sì, io {FORM} una fame pazzesca!', replyAnswer:'ho', replyVerb:'avere', replySubject:'io', replyGloss:'Yes, I’m super hungry!' },
-    { id:'p2', askerCue:'Ask where they are right now — essere (tu)', askerReply:'Tu dove {FORM} adesso? 👀', askerAnswer:'sei', askerVerb:'essere', askerSubject:'tu', askerGloss:'Where are you right now?',
-      replyCue:'Say you are at home — essere (io)', replyText:'Io {FORM} a casa, e tu?', replyAnswer:'sono', replyVerb:'essere', replySubject:'io', replyGloss:'I’m at home, and you?' },
-    { id:'p3', askerCue:'Say your sister is at school until five — essere (lei)', askerReply:'Mia sorella {FORM} a scuola fino alle cinque', askerAnswer:'è', askerVerb:'essere', askerSubject:'lei', askerGloss:'My sister is at school until five',
-      replyCue:'Say your brother has a game tonight — avere (lui)', replyText:'E mio fratello {FORM} una partita stasera ⚽', replyAnswer:'ha', replyVerb:'avere', replySubject:'lui', replyGloss:'And my brother has a game tonight' },
-    { id:'p4', askerCue:'Ask how old they are — avere … anni (tu)', askerReply:'Scusa, quanti anni {FORM} tu?', askerAnswer:'hai', askerVerb:'avere', askerSubject:'tu', askerGloss:'Sorry, how old are you?',
-      replyCue:'Say you are 16 — avere … anni (io)', replyText:'Io {FORM} sedici anni 🎂', replyAnswer:'ho', replyVerb:'avere', replySubject:'io', replyGloss:'I’m sixteen' },
-    { id:'p5', askerCue:'Ask if you guys are cold — avere freddo (voi)', askerReply:'Raga, voi {FORM} freddo? Qui è un freezer 🥶', askerAnswer:'avete', askerVerb:'avere', askerSubject:'voi', askerGloss:'Guys, are you cold? It’s a freezer in here',
-      replyCue:'Say you are all cold — avere freddo (noi)', replyText:'Sì, noi {FORM} freddo tutti!', replyAnswer:'abbiamo', replyVerb:'avere', replySubject:'noi', replyGloss:'Yes, we’re all cold!' },
-    { id:'p6', askerCue:'Ask if Marco and Leo are at the park — essere (loro)', askerReply:'Marco e Leo {FORM} al parco? 🏀', askerAnswer:'sono', askerVerb:'essere', askerSubject:'loro', askerGloss:'Are Marco and Leo at the park?',
-      replyCue:'Say yes, and they have the ball — avere (loro)', replyText:'Sì, e loro {FORM} il pallone. Andiamo!', replyAnswer:'hanno', replyVerb:'avere', replySubject:'loro', replyGloss:'Yes, and they have the ball. Let’s go!' },
-    { id:'p7', askerCue:'Say “we are ready” — essere (noi)', askerReply:'Noi {FORM} pronti. Partiamo? 🚀', askerAnswer:'siamo', askerVerb:'essere', askerSubject:'noi', askerGloss:'We’re ready. Shall we go?',
-      replyCue:'Ask if you all have the tickets — avere (voi)', replyText:'Aspetta! Voi {FORM} i biglietti? 🎫', replyAnswer:'avete', replyVerb:'avere', replySubject:'voi', replyGloss:'Wait! Do you guys have the tickets?' },
-    { id:'p8', askerCue:'Ask if they have Italian homework — avere (tu)', askerReply:'Tu {FORM} i compiti di italiano? 📚', askerAnswer:'hai', askerVerb:'avere', askerSubject:'tu', askerGloss:'Do you have Italian homework?',
-      replyCue:'Say yes, but the homework is easy — essere (loro: i compiti)', replyText:'Sì, ma i compiti {FORM} facili 😎', replyAnswer:'sono', replyVerb:'essere', replySubject:'loro', replyGloss:'Yes, but the homework is easy' },
-    { id:'p9', askerCue:'Ask if they are wiped out — essere (tu)', askerReply:'Tu {FORM} a pezzi? Sembri uno zombie ahah 🧟', askerAnswer:'sei', askerVerb:'essere', askerSubject:'tu', askerGloss:'Are you wiped out? You look like a zombie lol',
-      replyCue:'Say you are so sleepy — avere sonno (io)', replyText:'Sì, io {FORM} troppo sonno 😴', replyAnswer:'ho', replyVerb:'avere', replySubject:'io', replyGloss:'Yes, I’m way too sleepy' },
-    { id:'p10', askerCue:'Tell the group “you guys are amazing” — essere (voi)', askerReply:'Raga, voi {FORM} incredibili! 💛', askerAnswer:'siete', askerVerb:'essere', askerSubject:'voi', askerGloss:'Guys, you’re amazing!',
-      replyCue:'Say thanks, you are right — avere ragione (tu)', replyText:'Grazie! Tu {FORM} ragione, siamo un team 😎', replyAnswer:'hai', replyVerb:'avere', replySubject:'tu', replyGloss:'Thanks! You’re right, we’re a team' }
+    { id:'p1', askerReply:'Ehi, tu {FORM} fame? 🍕', askerAnswer:'hai', askerVerb:'avere', askerSubject:'tu', askerGloss:'Hey, are you hungry?',
+      askerBlank:'Hey, ___ you hungry?', askerSubjectLabel:null, askerIdiom:'avere fame = to be hungry',
+      replyText:'Sì, io {FORM} una fame pazzesca!', replyAnswer:'ho', replyVerb:'avere', replySubject:'io', replyGloss:'Yes, I’m super hungry!',
+      replyBlank:'Yes, I ___ super hungry!', replySubjectLabel:null, replyIdiom:'avere fame = to be hungry' },
+    { id:'p2', askerReply:'Tu dove {FORM} adesso? 👀', askerAnswer:'sei', askerVerb:'essere', askerSubject:'tu', askerGloss:'Where are you right now?',
+      askerBlank:'Where ___ you right now?', askerSubjectLabel:null, askerIdiom:null,
+      replyText:'Io {FORM} a casa, e tu?', replyAnswer:'sono', replyVerb:'essere', replySubject:'io', replyGloss:'I’m at home, and you?',
+      replyBlank:'I ___ at home, and you?', replySubjectLabel:null, replyIdiom:null },
+    { id:'p3', askerReply:'Mia sorella {FORM} a scuola fino alle cinque', askerAnswer:'è', askerVerb:'essere', askerSubject:'lei', askerGloss:'My sister is at school until five',
+      askerBlank:'My sister ___ at school until five', askerSubjectLabel:'mia sorella (= lei)', askerIdiom:null,
+      replyText:'E mio fratello {FORM} una partita stasera ⚽', replyAnswer:'ha', replyVerb:'avere', replySubject:'lui', replyGloss:'And my brother has a game tonight',
+      replyBlank:'And my brother ___ a game tonight', replySubjectLabel:'mio fratello (= lui)', replyIdiom:null },
+    { id:'p4', askerReply:'Scusa, quanti anni {FORM} tu?', askerAnswer:'hai', askerVerb:'avere', askerSubject:'tu', askerGloss:'Sorry, how old are you?',
+      askerBlank:'Sorry, how old ___ you?', askerSubjectLabel:null, askerIdiom:'avere … anni = to be … years old',
+      replyText:'Io {FORM} sedici anni 🎂', replyAnswer:'ho', replyVerb:'avere', replySubject:'io', replyGloss:'I’m sixteen',
+      replyBlank:'I ___ sixteen', replySubjectLabel:null, replyIdiom:'avere … anni = to be … years old' },
+    { id:'p5', askerReply:'Raga, voi {FORM} freddo? Qui è un freezer 🥶', askerAnswer:'avete', askerVerb:'avere', askerSubject:'voi', askerGloss:'Guys, are you cold? It’s a freezer in here',
+      askerBlank:'Guys, ___ you cold? It’s a freezer in here', askerSubjectLabel:null, askerIdiom:'avere freddo = to be cold',
+      replyText:'Sì, noi {FORM} freddo tutti!', replyAnswer:'abbiamo', replyVerb:'avere', replySubject:'noi', replyGloss:'Yes, we’re all cold!',
+      replyBlank:'Yes, we ___ all cold!', replySubjectLabel:null, replyIdiom:'avere freddo = to be cold' },
+    { id:'p6', askerReply:'Marco e Leo {FORM} al parco? 🏀', askerAnswer:'sono', askerVerb:'essere', askerSubject:'loro', askerGloss:'Are Marco and Leo at the park?',
+      askerBlank:'___ Marco and Leo at the park?', askerSubjectLabel:'Marco e Leo (= loro)', askerIdiom:null,
+      replyText:'Sì, e loro {FORM} il pallone. Andiamo!', replyAnswer:'hanno', replyVerb:'avere', replySubject:'loro', replyGloss:'Yes, and they have the ball. Let’s go!',
+      replyBlank:'Yes, and they ___ the ball. Let’s go!', replySubjectLabel:null, replyIdiom:null },
+    { id:'p7', askerReply:'Noi {FORM} pronti. Partiamo? 🚀', askerAnswer:'siamo', askerVerb:'essere', askerSubject:'noi', askerGloss:'We’re ready. Shall we go?',
+      askerBlank:'We ___ ready. Shall we go?', askerSubjectLabel:null, askerIdiom:null,
+      replyText:'Aspetta! Voi {FORM} i biglietti? 🎫', replyAnswer:'avete', replyVerb:'avere', replySubject:'voi', replyGloss:'Wait! Do you guys have the tickets?',
+      replyBlank:'Wait! You guys ___ the tickets?', replySubjectLabel:null, replyIdiom:null },
+    { id:'p8', askerReply:'Tu {FORM} i compiti di italiano? 📚', askerAnswer:'hai', askerVerb:'avere', askerSubject:'tu', askerGloss:'Do you have Italian homework?',
+      askerBlank:'You ___ Italian homework?', askerSubjectLabel:null, askerIdiom:null,
+      replyText:'Sì, ma i compiti {FORM} facili 😎', replyAnswer:'sono', replyVerb:'essere', replySubject:'loro', replyGloss:'Yes, but the homework is easy',
+      replyBlank:'Yes, but the homework ___ easy', replySubjectLabel:'i compiti (= loro)', replyIdiom:null },
+    { id:'p9', askerReply:'Tu {FORM} a pezzi? Sembri uno zombie ahah 🧟', askerAnswer:'sei', askerVerb:'essere', askerSubject:'tu', askerGloss:'Are you wiped out? You look like a zombie lol',
+      askerBlank:'___ you wiped out? You look like a zombie lol', askerSubjectLabel:null, askerIdiom:null,
+      replyText:'Sì, io {FORM} troppo sonno 😴', replyAnswer:'ho', replyVerb:'avere', replySubject:'io', replyGloss:'Yes, I’m way too sleepy',
+      replyBlank:'Yes, I ___ way too sleepy', replySubjectLabel:null, replyIdiom:'avere sonno = to be sleepy' },
+    { id:'p10', askerReply:'Raga, voi {FORM} incredibili! 💛', askerAnswer:'siete', askerVerb:'essere', askerSubject:'voi', askerGloss:'Guys, you’re amazing!',
+      askerBlank:'Guys, you ___ amazing!', askerSubjectLabel:null, askerIdiom:null,
+      replyText:'Grazie! Tu {FORM} ragione, siamo un team 😎', replyAnswer:'hai', replyVerb:'avere', replySubject:'tu', replyGloss:'Thanks! You’re right, we’re a team',
+      replyBlank:'Thanks! You ___ right, we’re a team', replySubjectLabel:null, replyIdiom:'avere ragione = to be right' }
   ];
 
   function normalize(s) {
