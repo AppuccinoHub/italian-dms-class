@@ -49,12 +49,17 @@
     }
     return a;
   }
+  /* Chips per help level match Solo exactly: More help 2, Just right 4, Challenge 4
+     (the right form + 1 / 3 / 3 wrong forms). Every template states its subject,
+     so any other form is clearly wrong. */
+  const CHIP_COUNTS = { more: 2, mid: 4, challenge: 4 };
+  function chipCount(helpLevel) {
+    return CHIP_COUNTS[helpLevel] || CHIP_COUNTS.mid;
+  }
   function uniqueChips(answer, helpLevel) {
     const ans = normalize(answer);
     const pool = ALL_FORMS.filter((f) => normalize(f) !== ans);
-    let n = 3;
-    if (helpLevel === 'more') n = 2;
-    if (helpLevel === 'challenge') n = 4;
+    const n = chipCount(helpLevel) - 1;
     return shuffle([answer].concat(shuffle(pool).slice(0, n)));
   }
   /* Fill the form in; capitalise it when it starts a sentence. */
@@ -112,7 +117,7 @@
     ESSERE, AVERE, ALL_FORMS, CLASS_PROMPTS,
     TARGET_ROUNDS: CLASS_PROMPTS.length,
     SCORED_TURNS: CLASS_PROMPTS.length * 2,
-    normalize, shuffle, uniqueChips, fillForm, makeCode,
+    normalize, shuffle, uniqueChips, chipCount, CHIP_COUNTS, fillForm, makeCode,
     teacherPeerId, studentPeerId, makeStudentId, scorePct,
     rowsToCsv, encodeSubmission, decodeSubmission
   };

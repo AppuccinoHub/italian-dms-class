@@ -165,6 +165,7 @@ input, select {
   cursor:pointer; min-height:48px;
 }
 .chip:disabled { opacity:.4; }
+.chip.handoff { background:var(--send); color:#fff; border-color:transparent; }
 .composer-wrap { flex-shrink:0; border-top:.5px solid var(--separator); padding-bottom:max(18px, env(safe-area-inset-bottom)); }
 .toast {
   position:absolute; left:50%; top:64px; transform:translateX(-50%); background:var(--toast-bg);
@@ -332,15 +333,30 @@ input, select {
     return phase === 'ask' ? askerIdx : 1 - askerIdx;
   }
 
+  // Local saving must never break the app: if the browser blocks or fills up
+  // localStorage, every call quietly does nothing and the app keeps working.
+  const store = {
+    get(key) { try { return window.localStorage.getItem(key); } catch (e) { return null; } },
+    set(key, val) { try { window.localStorage.setItem(key, val); return true; } catch (e) { return false; } }
+  };
   function loadProfile() {
+    const base = { name:'', avatarColor:'c0', helpLevel:'mid', theme:'dark' };
     try {
-      const raw = localStorage.getItem(STORAGE);
-      if (raw) return Object.assign({ name:'', avatarColor:'c0', helpLevel:'mid', theme:'dark' }, JSON.parse(raw));
+      const raw = store.get(STORAGE);
+      if (raw) return Object.assign(base, JSON.parse(raw));
     } catch (e) {}
-    return { name:'', avatarColor:'c0', helpLevel:'mid', theme:'dark' };
+    return base;
   }
   function saveProfile() {
-    try { localStorage.setItem(STORAGE, JSON.stringify(profile)); } catch (e) {}
+    try { store.set(STORAGE, JSON.stringify(profile)); } catch (e) {}
+  }
+  // Shared Chromebooks: forget the first name once work is turned in,
+  // so the next student's Join form starts blank.
+  function forgetName() {
+    profile.name = '';
+    saveProfile();
+    const f = $('firstName');
+    if (f) f.value = '';
   }
 
   function toast(msg) {
@@ -406,7 +422,10 @@ input, select {
 
   function addBubble(side, text, opts) {
     const el = document.createElement('div');
-    el.className = 'bubble ' + side + (opts && opts.correct === true ? ' right' : '') + (opts && opts.correct === false ? ' wrong' : '');
+    // opts.correct is always kept in the transcript; opts.hideMark hides the
+    // red/green outline (used for the partner's answers on this screen).
+    const mark = opts && !opts.hideMark;
+    el.className = 'bubble ' + side + (mark && opts.correct === true ? ' right' : '') + (mark && opts.correct === false ? ' wrong' : '');
     el.textContent = text;
     $('messages').appendChild(el);
     $('messages').scrollTop = $('messages').scrollHeight;
@@ -416,6 +435,10 @@ input, select {
   function clearChips() {
     $('suggestions').innerHTML = '';
     $('cueHint').innerHTML = '';
+  }
+  // Remove every red/green outline from the thread (Pass & play hand-off).
+  function clearMarks() {
+    $('messages').querySelectorAll('.bubble.right, .bubble.wrong').forEach((b) => b.classList.remove('right', 'wrong'));
   }
 
   function currentPrompt() {
@@ -509,8 +532,12 @@ input, select {
     };
 
     if (passMode) {
-      // advance locally
-      advanceAfterSend();
+      // The player who just answered sees their own feedback. After a question
+      // the device goes to the other player, so we pause for a hand-off and
+      // clear the outlines then. After a reply the same player asks next.
+      const last = phase === 'reply' && round + 1 >= C.TARGET_ROUNDS;
+      if (phase === 'ask' || last) showHandoff(last);
+      else advanceAfterSend();
       return;
     }
 
@@ -525,6 +552,23 @@ input, select {
       phase = 'ask';
       presentTurn();
     }
+  }
+
+  function showHandoff(last) {
+    const next = passPlayers[1 - passTurnIdx()];
+    $('cueHint').textContent = last ? 'Last turn done — check your answer above.' : 'Check your answer above, then pass the device to ' + next.name + '.';
+    $('suggestions').innerHTML = '';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip handoff';
+    btn.id = 'btnHandoff';
+    btn.textContent = last ? 'Finish → get the code' : next.name + '’s turn →';
+    btn.addEventListener('click', () => {
+      if (!passMode || completed) return;
+      clearMarks();
+      advanceAfterSend();
+    });
+    $('suggestions').appendChild(btn);
   }
 
   function advanceAfterSend() {
@@ -546,7 +590,9 @@ input, select {
 
   function onFromPartner(payload) {
     if (!payload || payload.kind !== 'utterance') return;
-    addBubble('them', payload.text, { correct: payload.correct, name: partner && partner.name });
+    // The partner's answer shows without red/green: only the student who answered
+    // sees their own feedback. Scores and the teacher's transcript are unchanged.
+    addBubble('them', payload.text, { correct: payload.correct, name: partner && partner.name, hideMark: true });
     const r = typeof payload.round === 'number' ? payload.round : round;
     // Partner asked → I reply
     if (payload.phase === 'ask') {
@@ -563,7 +609,8 @@ input, select {
   }
 
   function sendToHub(msg) {
-    try { if (conn && conn.open) conn.send(msg); } catch (e) {}
+    try { if (conn && conn.open) { conn.send(msg); return true; } } catch (e) {}
+    return false;
   }
 
   function disconnect() {
@@ -690,7 +737,8 @@ input, select {
     if (round < C.TARGET_ROUNDS && !confirm('Turn in now? You finished ' + Math.min(round, C.TARGET_ROUNDS) + ' of ' + C.TARGET_ROUNDS + ' rounds.')) return;
     if (passMode) { finishPass(); return; }
     completed = true;
-    sendToHub({ type: 'complete', pairId, scoreCorrect: correct, scoreTried: tried });
+    const sent = sendToHub({ type: 'complete', pairId, scoreCorrect: correct, scoreTried: tried });
+    if (sent) forgetName();
     addBubble('sys', 'Turned in ✓ — score ' + C.scorePct(correct, tried) + '%');
     clearChips();
     toast('Submitted to teacher');
@@ -707,7 +755,6 @@ input, select {
     ];
     passMode = true;
     partner = passPlayers[1];
-    profile.name = n1;
     myRole = 'asker';
     round = 0; phase = 'ask';
     correct = 0; tried = 0; completed = false;
@@ -723,6 +770,8 @@ input, select {
   function finishPass() {
     completed = true;
     clearChips();
+    clearMarks();
+    forgetName();
     const payload = {
       code: 'PASS',
       className: 'Pass & play',

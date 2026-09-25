@@ -1,5 +1,5 @@
 /* Italian DMs Class — app-shell SW (school-safe; PeerJS vendored) */
-const CACHE = 'italian-dms-class-v4';
+const CACHE = 'italian-dms-class-v5';
 const SHELL = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const SHELL = [
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/icon-maskable-512.png',
   './icons/apple-touch-icon.png'
 ];
 /* og.png intentionally omitted from precache — network-first for fresh link previews */
