@@ -1,5 +1,8 @@
 # Italian DMs · Class Mode
 
+**[▶ Play online](https)** — open the live app in your browser.
+
+
 **Separate app** from solo Italian DMs. Students pair up and practice **essere / avere** (+ fame, sete, freddo, caldo, sonno) in partner DMs for a grade. Teacher browser is the session hub (PeerJS) — no student cloud login.
 
 - **Student join:** https://appuccinohub.github.io/italian-dms-class/
